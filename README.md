@@ -4,7 +4,7 @@
 
 Este es un servidor que utiliza sockets por medio de una conexion TCP para simular un chat similar a los [clientes IRC](https://en.wikipedia.org/wiki/IRC) como [weechat](https://weechat.org/).
 
-Permite enviar mensajes globales o privados por medio de `/msg <user> <msg>` o por medio de JSON (explicado posteriormente). El servidor utiliza hilos con `threading` para manejar a cada cliente con un diccionario y un lock para manejar la lista de usuarios conectados.
+Permite enviar mensajes globales o privados por medio de `/msg <user> <msg>`. El servidor utiliza hilos con `threading` para manejar a cada cliente con un diccionario y un lock para manejar la lista de usuarios conectados.
 
 El servidor se crea utilizando `socket`:
 
@@ -36,33 +36,6 @@ Dado que múltiples hilos pueden acceder al diccionario de clientes al mismo tie
 with clients_lock:
     clients[username] = conn
 ```
-
-## Tipos de Mensajes
-
-Se utiliza JSON para estructurar la comunicación entre cliente y servidor.
-
-Ejemplo de mensaje global:
-
-```json
-{
-  "type": "broadcast",
-  "message": "Hola a todos"
-}
-```
-
-Ejemplo de mensaje privado:
-
-```json
-{
-  "type": "private",
-  "to": "usuario",
-  "message": "Hola"
-}
-```
-
-Esto permite que el cliente pueda ser implementado de una manera muy sencilla.
-
-> El _overhead_ del formato JSON en este caso es despreciable debido al alcance del proyecto
 
 ## Comandos
 

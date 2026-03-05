@@ -31,6 +31,17 @@ def broadcast(msg, sender=None):
         remove_client(user)
 
 
+def send_to_self(msg, sender):
+    with clients_lock:
+        sock = clients.get(sender)
+
+    if sock:
+        try:
+            send(sock, msg)
+        except:
+            pass
+
+
 def remove_client(username):
     with clients_lock:
         if username in clients:
@@ -96,6 +107,12 @@ def handle_client(conn, addr):
 
                 target = parts[1]
                 text = parts[2]
+                with clients_lock:
+                    exists = target in clients
+
+                if not exists:
+                    send_to_self("User does not exist", username)
+                    continue
 
                 private_message(target, f"[PM from {username}] {text}")
                 continue

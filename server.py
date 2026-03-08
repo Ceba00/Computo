@@ -2,7 +2,7 @@ import socket
 import threading
 
 HOST = "0.0.0.0"
-PORT = 5000
+PORT = 5050
 
 clients = {}
 clients_lock = threading.Lock()
@@ -66,20 +66,20 @@ def handle_client(conn, addr):
     file = conn.makefile("r")
 
     try:
-        send(conn, "Enter username:")
+        while True:
+            send(conn, "Enter username:")
+            username = file.readline().strip()
+            
+            if not username:
+                send(conn, "Username cannot be empty")
+                continue
 
-        username = file.readline().strip()
-        if not username:
-            conn.close()
-            return
-
-        with clients_lock:
-            if username in clients:
-                send(conn, "Username already taken")
-                conn.close()
-                return
-
-            clients[username] = conn
+            with clients_lock:
+                if username in clients:
+                    send(conn, "Username already taken")
+                    continue
+                clients[username] = conn
+                break
 
         print(f"{username} connected from {addr}")
 

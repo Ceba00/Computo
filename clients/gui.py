@@ -125,7 +125,6 @@ class ChatClientGUI:
             self.tabs[channel_name] = {"frame": frame, "text_area": chat_area}
 
     def switch_channel(self, channel_name):
-        """Cambia a una pestaña específica, creándola si es necesario."""
         self.current_channel = channel_name
         self.create_tab(channel_name)
 
@@ -136,7 +135,6 @@ class ChatClientGUI:
         self.groups_listbox.selection_clear(0, tk.END)
 
     def on_tab_changed(self, event):
-        """Actualiza el current_channel cuando el usuario hace clic en una pestaña."""
         selected_tab = event.widget.select()
         if selected_tab:
             for channel_name, data in self.tabs.items():

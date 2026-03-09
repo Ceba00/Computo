@@ -20,32 +20,29 @@ class ChatClientGUI:
 
         self.setup_ui()
         self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
-        
-        # Iniciar conexión después de renderizar UI.
+
         self.master.after(100, self.connect_to_server)
 
     def setup_ui(self):
-        self.bg_color = "#1E1E2E"       # Fondo oscuro (Catppuccin Mocha Base)
-        self.sidebar_color = "#181825"  # Fondo sidebar (Mantle)
-        self.panel_color = "#313244"    # Panel para input/botones (Surface0)
-        self.text_color = "#CDD6F4"     # Texto principal (Text)
-        self.accent_color = "#89B4FA"   # Acento azul (Blue)
-        self.accent_hover = "#B4BEFE"   # Acento azul claro para hover
-        self.self_bubble = "#A6E3A1"    # Burbuja verde para el usuario (Green)
-        self.other_bubble = "#89DCEB"   # Burbuja celeste para otros (Sky)
-        self.system_text = "#F38BA8"    # Texto rojo para sistema/errores (Red)
+        self.bg_color = "#1E1E2E"
+        self.sidebar_color = "#181825"
+        self.panel_color = "#313244"
+        self.text_color = "#CDD6F4"
+        self.accent_color = "#89B4FA"
+        self.accent_hover = "#B4BEFE"
+        self.self_bubble = "#A6E3A1"
+        self.other_bubble = "#89DCEB"
+        self.system_text = "#F38BA8"
 
-        self.master.geometry("800x600") # Hacer la ventana más ancha para el sidebar
+        self.master.geometry("800x600")
         self.master.configure(bg=self.bg_color)
         self.font_main = ("Helvetica", 14)
         self.font_bold = ("Helvetica", 14, "bold")
         self.font_small = ("Helvetica", 10, "italic")
-        
-        # Canal Activo y Diccionario de Pestañas
-        self.current_channel = "Global"
-        self.tabs = {} # {"NombreDelCanal": ScrolledText_Widget}
 
-        # Estilo para el Notebook (Pestañas)
+        self.current_channel = "Global"
+        self.tabs = {}
+
         from tkinter import ttk
         style = ttk.Style()
         style.theme_use('default')
@@ -53,11 +50,9 @@ class ChatClientGUI:
         style.configure("TNotebook.Tab", background=self.sidebar_color, foreground=self.text_color, padding=[10, 5], font=self.font_bold)
         style.map("TNotebook.Tab", background=[("selected", self.panel_color)], foreground=[("selected", self.accent_color)])
 
-        # Contenedor Principal Divisible (PanedWindow)
         self.paned_window = tk.PanedWindow(self.master, orient=tk.HORIZONTAL, bg=self.bg_color, sashwidth=5, bd=0)
         self.paned_window.pack(fill=tk.BOTH, expand=True)
 
-        # ====== SIDEBAR ======
         self.sidebar_frame = tk.Frame(self.paned_window, bg=self.sidebar_color, width=200)
         self.paned_window.add(self.sidebar_frame, minsize=150)
         
@@ -72,23 +67,18 @@ class ChatClientGUI:
         self.groups_listbox = tk.Listbox(self.sidebar_frame, bg=self.sidebar_color, fg=self.text_color, selectbackground=self.panel_color, borderwidth=0, highlightthickness=0)
         self.groups_listbox.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         self.groups_listbox.bind("<<ListboxSelect>>", self.on_group_select)
-        
-        # Botón crear grupo
+
         tk.Button(self.sidebar_frame, text="➕ Crear/Unirse Grupo", bg=self.panel_color, fg=self.text_color, borderwidth=0, command=self.prompt_group).pack(fill=tk.X, pady=5, padx=5)
 
-        # ====== MAIN CHAT AREA ======
         self.chat_frame = tk.Frame(self.paned_window, bg=self.bg_color)
         self.paned_window.add(self.chat_frame, minsize=400)
 
-        # Pestañas (Notebook)
         self.notebook = ttk.Notebook(self.chat_frame)
         self.notebook.pack(expand=True, fill=tk.BOTH)
         self.notebook.bind("<<NotebookTabChanged>>", self.on_tab_changed)
 
-        # Crear pestaña Global por defecto
         self.create_tab("Global")
-        
-        # Frame de entrada inferior
+
         self.bottom_frame = tk.Frame(self.chat_frame, bg=self.panel_color, pady=10, padx=10)
         self.bottom_frame.pack(fill=tk.X, side=tk.BOTTOM)
         
@@ -138,8 +128,7 @@ class ChatClientGUI:
         """Cambia a una pestaña específica, creándola si es necesario."""
         self.current_channel = channel_name
         self.create_tab(channel_name)
-        
-        # Seleccionar la pestaña en el Notebook
+
         tab_id = self.tabs[channel_name]["frame"]
         self.notebook.select(tab_id)
         
@@ -153,7 +142,6 @@ class ChatClientGUI:
             for channel_name, data in self.tabs.items():
                 if str(data["frame"]) == selected_tab:
                     self.current_channel = channel_name
-                    # Remover notificación si existe
                     self.notebook.tab(selected_tab, text=f" {channel_name} ")
                     break
 
@@ -235,7 +223,6 @@ class ChatClientGUI:
         self.thread.start()
 
     def update_state_ui(self, state_str):
-        # Format: STATE:user1,user2|group1,group2
         try:
             data = state_str.split(":", 1)[1]
             users_part, groups_part = data.split("|")
@@ -254,13 +241,11 @@ class ChatClientGUI:
 
     def display_message(self, msg, tag="left", channel="Global"):
         self.create_tab(channel)
-        
-        # Filtro de rebote: si el mensaje proviene de nosotros mismos (echo del server), no lo mostramos de nuevo
+
         if hasattr(self, 'username'):
             if msg.startswith(f"[{self.username}]") or msg.startswith(f"[# {channel[1:]}] {self.username}:"):
                 return
-                
-        # Si la pestaña no es la actual, agregar una notificación visual
+
         if channel != self.current_channel:
             tab_id = self.tabs[channel]["frame"]
             self.notebook.tab(tab_id, text=f" 🔴 {channel} ")
@@ -284,46 +269,26 @@ class ChatClientGUI:
                 tag = "left"
 
                 if line.startswith("[@ "):
-                    # Private message incoming "[@ sender] text"
                     end_bracket = line.find("]")
                     sender = line[3:end_bracket]
                     channel = f"@{sender}"
                 elif line.startswith("[# "):
-                    # Group message incoming "[# group] sender: text"
                     end_bracket = line.find("]")
                     group = line[3:end_bracket]
                     channel = f"#{group}"
-                    
-                    # Prevent echo of our own group messages
-                    # format: [# group] [Username]: text
-                    # We need to detect if it's from us, but the server formats it with just the username
-                    # It's better to let `display_message` handle the visual check, or just ignore our own name
-                    # MIRA ABAJO PARA EL FILTRO DE MI PROPIO NOMBRE
+
 
                 elif line.startswith("[PM from "):
-                    # Legacy PM format defense
                     end_bracket = line.find("]")
                     sender = line[9:end_bracket]
                     channel = f"@{sender}"
                 elif line.startswith("[") and "] " in line:
-                    # Global message "[sender] text"
                     pass
                 elif line.startswith("STATE:"):
-                    # Process state broadcast from server
                     self.master.after(0, self.update_state_ui, line)
                     continue
                 elif line.startswith("*") or line.startswith("Users:") or line.startswith("Server"):
-                    tag = "center" # System messages
-                    
-                # Si el mensaje lo enviamos nosotros en un grupo, el servidor lo distribuye.
-                # Lo ignoramos porque ya lo mostramos localmente en `send_message`.
-                # Nota: Asumimos que el usuario sabe su propio nombre, o podemos filtrar si vemos "[Tú]"
-                # Pero el servidor envía "[nombre]: texto". En global envía "[nombre] texto"
-                
-                # We will pass the line as is. We need to filter our own name.
-                # Para evitar complicaciones, vamos a buscar si la linea tiene nuestro propio username
-                # como esto requriliria conocer `self.username` (que no guardamos), 
-                # lo mejor es guardarlo en authenticate().
+                    tag = "center"
 
                 self.master.after(0, self.display_message, line, tag, channel)
         except Exception:
